@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Environment / virtualenv
+.env
+.env.*
+venv/
+*.venv/
+.conda/
+*.conda/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs / temp files
+*.log
+*.tmp
+*.swp
+
+# LangGraph / ML
+*.ckpt
+*.pt
+*.bin
+wandb/
+outputs/
