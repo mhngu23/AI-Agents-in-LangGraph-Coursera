@@ -2,6 +2,7 @@
 from src.graph.state import GraphState
 
 def logical_agent(state: GraphState, llm, stream=False):
+    """A logical agent that provides fact-based responses."""
     last_message = state["messages"][-1]
 
     messages = [

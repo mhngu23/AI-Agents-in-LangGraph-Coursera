@@ -1,6 +1,8 @@
 from src.graph.state import GraphState
 
 def therapist_agent(state: GraphState, llm, stream=False):
+    """A compassionate therapist agent that provides emotional support."""
+    
     last_message = state["messages"][-1]
 
     messages = [

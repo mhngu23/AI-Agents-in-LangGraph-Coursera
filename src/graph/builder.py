@@ -16,22 +16,14 @@ def build_graph(llm, token_callback=None):
     graph_builder = StateGraph(GraphState)
 
     def classify_wrapper(state):
+        """Wrapper for classify_message to fit graph node signature."""
         result = classify_message(state, llm)
         state.update(result)
         return state
 
-    # def therapist_wrapper(state):
-    #     result = therapist_agent(state, llm)
-    #     state.update(result)
-    #     return state
-
-    # def logical_wrapper(state):
-    #     result = logical_agent(state, llm)
-    #     state.update(result)
-    #     return state
-
     # Streaming wrapper for therapist agent
     def therapist_wrapper(state):
+        """Wrapper for therapist_agent to fit graph node signature."""
         assistant_message = {"role": "assistant", "content": ""}
         for token in therapist_agent(state, llm, stream=True):
             assistant_message["content"] += token.content
@@ -42,6 +34,7 @@ def build_graph(llm, token_callback=None):
 
     # Streaming wrapper for logical agent
     def logical_wrapper(state):
+        """Wrapper for logical_agent to fit graph node signature."""
         assistant_message = {"role": "assistant", "content": ""}
         for token in logical_agent(state, llm, stream=True):
             assistant_message["content"] += token.content
@@ -50,20 +43,24 @@ def build_graph(llm, token_callback=None):
                 token_callback(token, "logical")
         return state
     
+    # Build the graph
     graph_builder.add_node("classifier", classify_wrapper)
     graph_builder.add_node("router", router)
     graph_builder.add_node("therapist", therapist_wrapper)
     graph_builder.add_node("logical", logical_wrapper)
 
+    # Add edges from START to classifier via nodes
     graph_builder.add_edge(START, "classifier")
     graph_builder.add_edge("classifier", "router")
 
+    # Conditional edges from router to therapist or logical based on state
     graph_builder.add_conditional_edges(
         "router",
         lambda state: state.get("next"),
         {"therapist": "therapist", "logical": "logical"}
     )
 
+    # Edges from agents to END
     graph_builder.add_edge("therapist", END)
     graph_builder.add_edge("logical", END)
 
