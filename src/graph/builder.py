@@ -12,27 +12,44 @@ from src.graph.nodes.logical_agent import logical_agent
 
 
 
-def build_graph(llm):
+def build_graph(llm, token_callback=None):
     graph_builder = StateGraph(GraphState)
 
     def classify_wrapper(state):
         result = classify_message(state, llm)
-        # fallback if LLM output is invalid
-        if result.get("message_type") not in ("emotional", "logical"):
-            result["message_type"] = "logical"  # default choice
         state.update(result)
         return state
 
+    # def therapist_wrapper(state):
+    #     result = therapist_agent(state, llm)
+    #     state.update(result)
+    #     return state
+
+    # def logical_wrapper(state):
+    #     result = logical_agent(state, llm)
+    #     state.update(result)
+    #     return state
+
+    # Streaming wrapper for therapist agent
     def therapist_wrapper(state):
-        result = therapist_agent(state, llm)
-        state.update(result)
+        assistant_message = {"role": "assistant", "content": ""}
+        for token in therapist_agent(state, llm, stream=True):
+            assistant_message["content"] += token.content
+            state.update({"messages": [assistant_message]})
+            if token_callback:
+                token_callback(token, "therapist")
         return state
 
+    # Streaming wrapper for logical agent
     def logical_wrapper(state):
-        result = logical_agent(state, llm)
-        state.update(result)
+        assistant_message = {"role": "assistant", "content": ""}
+        for token in logical_agent(state, llm, stream=True):
+            assistant_message["content"] += token.content
+            state.update({"messages": [assistant_message]})
+            if token_callback:
+                token_callback(token, "logical")
         return state
-
+    
     graph_builder.add_node("classifier", classify_wrapper)
     graph_builder.add_node("router", router)
     graph_builder.add_node("therapist", therapist_wrapper)

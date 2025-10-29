@@ -1,7 +1,7 @@
 
 from src.graph.state import GraphState
 
-def logical_agent(state: GraphState, llm):
+def logical_agent(state: GraphState, llm, stream=False):
     last_message = state["messages"][-1]
 
     messages = [
@@ -16,5 +16,9 @@ def logical_agent(state: GraphState, llm):
             "content": last_message.content
         }
     ]
-    reply = llm.invoke(messages)
-    return {"messages": [{"role": "assistant", "content": reply.content}]}
+    if stream:
+        for token in llm.stream(messages):
+            yield token
+    else:
+        reply = llm.invoke(messages)
+        return {"messages": [{"role": "assistant", "content": reply.content}]}

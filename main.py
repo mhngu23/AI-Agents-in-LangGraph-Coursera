@@ -10,6 +10,9 @@ load_dotenv()  # Load environment variables from .env file
 
 api_key = os.getenv("ANTHROPIC_API_KEY")
 
+def print_token(token, node_name):
+    # node_name is "therapist" or "logical"
+    print(f"{token.content}", end="", flush=True)
 
 def run_chatbot():
     client = Anthropic(api_key=api_key)
@@ -22,7 +25,7 @@ def run_chatbot():
         api_key=api_key
     )
     
-    graph = build_graph(llm)
+    graph = build_graph(llm, token_callback=print_token)
 
     # Draw as PNG
     png_bytes = graph.get_graph().draw_png()
@@ -35,6 +38,7 @@ def run_chatbot():
     state = {"messages": [], "message_type": None}
 
     while True:
+        print("\n")
         user_input = input("Message: ")
         if user_input == "exit":
             print("Bye")
@@ -46,11 +50,6 @@ def run_chatbot():
 
         state = graph.invoke(state)
 
-        print(state["messages"])
-        
-        if state.get("messages") and len(state["messages"]) > 0:
-            last_message = state["messages"][-1]
-            print(f"Assistant: {last_message.content}")
 
 
 if __name__ == "__main__":
